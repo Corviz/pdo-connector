@@ -1,0 +1,54 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "ab00e8abf437eaf7307c74182bd23a14",
+    "content-hash": "36d34e35ed6108a205dd485be1338e6c",
+    "packages": [
+        {
+            "name": "corviz/framework",
+            "version": "dev-feature/database_access",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Corviz/framework.git",
+                "reference": "0ee4fc803bc9c923df211a9821f2cd6c82156a02"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Corviz/framework/zipball/0ee4fc803bc9c923df211a9821f2cd6c82156a02",
+                "reference": "0ee4fc803bc9c923df211a9821f2cd6c82156a02",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7"
+            },
+            "require-dev": {
+                "phpunit/phpunit": ">=5.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Corviz\\": "./src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Low weight php framework",
+            "time": "2017-02-07 00:19:09"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "corviz/framework": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}
