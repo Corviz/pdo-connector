@@ -165,13 +165,86 @@ class Connection extends BaseConnection
      */
     public function select(Query $query): Result
     {
-        $sql = $this->translate($query);
-
         $args = [];
-        //TODO: fill $args with values set in query object
-
+        $sql = $this->translate($query, $args);
         array_unshift($args, $sql);
         return $this->nativeQuery(...$args);
+    }
+
+    /**
+     * @param array $joins
+     * @param array $params
+     *
+     * @return string
+     */
+    private function parseJoinArray(array $joins, array &$params): string
+    {
+        $joinStr = '';
+        foreach ($joins as $join) {
+            if (!$join instanceof Query\Join) {
+                continue;
+            }
+
+            //TODO write parsing logic
+        }
+
+        return $joinStr;
+    }
+
+    /**
+     * @param Query\WhereClause $whereClause
+     * @param array             $params
+     *
+     * @return string
+     */
+    private function parseWhereClause(
+        Query\WhereClause $whereClause,
+        array &$params
+    ): string {
+        $clauses = $whereClause->getClauses();
+        $whereStr = '';
+
+        if (!$whereClause->isEmpty()) {
+            $isFirst = true;
+
+            foreach ($clauses as $clause) {
+                $params = array_merge($params, $clause['params']);
+                $value = $clause['value'];
+
+                if (!$isFirst) {
+                    $whereStr .= "{$clause['junction']} ";
+                }
+
+                //Format each type
+                switch ($clause['type']) {
+                    case 'where':
+                        $whereStr .= "({$value['field1']} {$value['operator']} {$value['field2']}) ";
+                    break;
+
+                    case 'between':
+                        $whereStr .= "({$value['value']} BETWEEN {$value['field1']} AND {$value['field2']}) ";
+                    break;
+
+                    case 'in':
+                        $whereStr .= "({$value['field']} IN (".implode(',', $value['values']).")) ";
+                    break;
+
+                    case 'inQuery':
+                        $whereStr .= "({$value['field']} IN (".$this->translate($value['query'], $params).")) ";
+                    break;
+
+                    case 'nested':
+                        $whereStr .= '('.$this->parseWhereClause($value['whereClause'], $params).') ';
+                    break;
+                }
+
+                if ($isFirst) {
+                    $isFirst = false;
+                }
+            }
+        }
+
+        return $whereStr;
     }
 
     /**
@@ -179,12 +252,29 @@ class Connection extends BaseConnection
      * SELECT string.
      *
      * @param Query $query
+     * @param array $params
      *
      * @return string
      */
-    private function translate(Query $query): string
+    private function translate(Query $query, array &$params): string
     {
-        return "";
+        $fields = implode(',', $query->getFields());
+        $from = $query->getFrom();
+        $join = $this->parseJoinArray($query->getJoins(), $params);
+        $where = $this->parseWhereClause(
+            $query->getWhereClause(),
+            $params
+        );
+
+        $qryString = "
+            SELECT $fields
+            FROM $from
+            $join
+            
+            ".($where ? "WHERE $where": '')."
+        ";
+
+        return $qryString;
     }
 
     /**
@@ -198,6 +288,10 @@ class Connection extends BaseConnection
     {
         if (!isset($options['dsn'], $options['user'], $options['password'])) {
             throw new \Exception('Missing "dsn", "user" or "password" information.');
+        }
+
+        if (!$this->connect()) {
+            throw new \Exception('Could not connect to database');
         }
 
         $this->options = $options;
