@@ -4,6 +4,7 @@ namespace Corviz\Connector\PDO;
 
 use Corviz\Database\Connection as BaseConnection;
 use Corviz\Database\Query;
+use Corviz\Database\Query\Join;
 use Corviz\Database\Result;
 use Corviz\Mvc\Model;
 
@@ -176,16 +177,34 @@ class Connection extends BaseConnection
      * @param array $params
      *
      * @return string
+     * @throws \Exception
      */
     private function parseJoinArray(array $joins, array &$params): string
     {
         $joinStr = '';
         foreach ($joins as $join) {
-            if (!$join instanceof Query\Join) {
+            if (!$join instanceof Join) {
                 continue;
             }
 
-            //TODO write parsing logic
+            $piece = '';
+
+            switch ($join->getType()) {
+                case Join::TYPE_INNER: $piece .= 'INNER '; break;
+                case Join::TYPE_RIGHT: $piece .= 'RIGHT '; break;
+                case Join::TYPE_LEFT: $piece .= 'LEFT '; break;
+                case JOIN::TYPE_OUTER: $piece .= 'FULL OUTER '; break;
+                default: throw new \Exception('Invalid join type'); break;
+            }
+
+            $piece .= 'JOIN '.$join->getTable();
+
+            $whereClause = $join->getWhereClause();
+            if (!$whereClause->isEmpty()) {
+                $piece .= ' ON '.$this->parseWhereClause($whereClause, $params);
+            }
+
+            $joinStr .= "$piece ";
         }
 
         return $joinStr;
