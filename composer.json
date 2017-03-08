@@ -5,9 +5,12 @@
   "require": {
     "corviz/framework": "dev-feature\/database_access"
   },
+  "require-dev": {
+    "phpunit/phpunit": ">=5.4"
+  },
   "autoload": {
     "psr-4": {
-      "Corviz\\PDO\\": "./src"
+      "Corviz\\Connector\\PDO\\": "./src"
     }
   }
 }

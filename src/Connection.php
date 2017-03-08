@@ -72,7 +72,7 @@ class Connection extends BaseConnection
                 $options['dsn'],
                 $options['user'],
                 $options['password'],
-                $options['extras']
+                isset($options['extras']) ? $options['extras'] : []
             );
 
             if (
@@ -84,6 +84,7 @@ class Connection extends BaseConnection
 
         } catch (\Exception $exception) {
             $connected = false;
+            $this->pdo = null;
         }
 
         return $connected;
@@ -161,25 +162,26 @@ class Connection extends BaseConnection
      * to the parameters provided by the query.
      *
      * @param Query $query
+     * @param array $params
      *
      * @return Result
      */
-    public function select(Query $query): Result
+    public function select(Query $query, array $params): Result
     {
-        $args = [];
-        $sql = $this->translate($query, $args);
+        $args = array_values($params);
+        $sql = $this->translate($query);
         array_unshift($args, $sql);
+
         return $this->nativeQuery(...$args);
     }
 
     /**
      * @param array $joins
-     * @param array $params
      *
      * @return string
      * @throws \Exception
      */
-    private function parseJoinArray(array $joins, array &$params): string
+    private function parseJoinArray(array $joins): string
     {
         $joinStr = '';
         foreach ($joins as $join) {
@@ -201,7 +203,7 @@ class Connection extends BaseConnection
 
             $whereClause = $join->getWhereClause();
             if (!$whereClause->isEmpty()) {
-                $piece .= ' ON '.$this->parseWhereClause($whereClause, $params);
+                $piece .= ' ON '.$this->parseWhereClause($whereClause);
             }
 
             $joinStr .= "$piece ";
@@ -212,14 +214,10 @@ class Connection extends BaseConnection
 
     /**
      * @param Query\WhereClause $whereClause
-     * @param array             $params
      *
      * @return string
      */
-    private function parseWhereClause(
-        Query\WhereClause $whereClause,
-        array &$params
-    ): string {
+    private function parseWhereClause(Query\WhereClause $whereClause): string {
         $clauses = $whereClause->getClauses();
         $whereStr = '';
 
@@ -227,7 +225,6 @@ class Connection extends BaseConnection
             $isFirst = true;
 
             foreach ($clauses as $clause) {
-                $params = array_merge($params, $clause['params']);
                 $value = $clause['value'];
 
                 if (!$isFirst) {
@@ -249,11 +246,11 @@ class Connection extends BaseConnection
                     break;
 
                     case 'inQuery':
-                        $whereStr .= "({$value['field']} IN (".$this->translate($value['query'], $params).")) ";
+                        $whereStr .= "({$value['field']} IN (".$this->translate($value['query']).")) ";
                     break;
 
                     case 'nested':
-                        $whereStr .= '('.$this->parseWhereClause($value['whereClause'], $params).') ';
+                        $whereStr .= '('.$this->parseWhereClause($value['whereClause']).') ';
                     break;
                 }
 
@@ -271,19 +268,15 @@ class Connection extends BaseConnection
      * SELECT string.
      *
      * @param Query $query
-     * @param array $params
      *
      * @return string
      */
-    private function translate(Query $query, array &$params): string
+    private function translate(Query $query): string
     {
         $fields = implode(',', $query->getFields());
         $from = $query->getFrom();
-        $join = $this->parseJoinArray($query->getJoins(), $params);
-        $where = $this->parseWhereClause(
-            $query->getWhereClause(),
-            $params
-        );
+        $join = $this->parseJoinArray($query->getJoins());
+        $where = $this->parseWhereClause($query->getWhereClause());
 
         $qryString = "
             SELECT $fields
