@@ -3,6 +3,7 @@
 namespace Corviz\Connector\PDO;
 
 use Corviz\Database\Connection as BaseConnection;
+use Corviz\Connector\PDO\Result as PDOResult;
 use Corviz\Database\Query;
 use Corviz\Database\Query\Join;
 use Corviz\Database\Result;
@@ -74,6 +75,8 @@ class Connection extends BaseConnection
                 $options['password'],
                 isset($options['extras']) ? $options['extras'] : []
             );
+            $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $this->pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
             if (
                 isset($options['afterConnect'])
@@ -132,6 +135,8 @@ class Connection extends BaseConnection
         $stmt = $this->pdo->prepare(array_shift($args));
         $stmt->execute($args);
         $this->rowCount = $stmt->rowCount();
+
+        return new PDOResult($this, $stmt);
     }
 
     /**
@@ -302,10 +307,9 @@ class Connection extends BaseConnection
             throw new \Exception('Missing "dsn", "user" or "password" information.');
         }
 
+        $this->options = $options;
         if (!$this->connect()) {
             throw new \Exception('Could not connect to database');
         }
-
-        $this->options = $options;
     }
 }
