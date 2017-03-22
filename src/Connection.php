@@ -218,6 +218,21 @@ class Connection extends BaseConnection
     }
 
     /**
+     * @param array $order
+     *
+     * @return string
+     */
+    private function parseOrderArray(array $order): string
+    {
+        $orderBy = '';
+        foreach ($order as $field => $ascDesc) {
+            $orderBy .= "$field $ascDesc,";
+        }
+
+        return rtrim($orderBy, ',');
+    }
+
+    /**
      * @param Query\WhereClause $whereClause
      *
      * @return string
@@ -239,7 +254,7 @@ class Connection extends BaseConnection
                 //Format each type
                 switch ($clause['type']) {
                     case 'where':
-                        $whereStr .= "({$value['field1']} {$value['operator']} {$value['field2']}) ";
+                        $whereStr .= "({$value['field']} {$value['operator']} {$value['field2']}) ";
                     break;
 
                     case 'between':
@@ -282,13 +297,18 @@ class Connection extends BaseConnection
         $from = $query->getFrom();
         $join = $this->parseJoinArray($query->getJoins());
         $where = $this->parseWhereClause($query->getWhereClause());
+        $orderBy = $this->parseOrderArray($query->getOrdination());
+        $limit = $query->getQueryLimit();
+        $offset = $query->getQueryOffset();
 
         $qryString = "
             SELECT $fields
             FROM $from
             $join
-            
-            ".($where ? "WHERE $where": '')."
+            ".($where ? "WHERE $where" : '')."
+            ".($orderBy ? "ORDER BY $orderBy" : '')."
+            ".(!is_null($limit) ? "LIMIT $limit" : '')."
+            ".(!is_null($offset) ? "OFFSET $offset" : '')."
         ";
 
         return $qryString;
