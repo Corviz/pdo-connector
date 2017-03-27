@@ -298,8 +298,8 @@ class Connection extends BaseConnection
         $join = $this->parseJoinArray($query->getJoins());
         $where = $this->parseWhereClause($query->getWhereClause());
         $orderBy = $this->parseOrderArray($query->getOrdination());
-        $limit = $query->getQueryLimit();
-        $offset = $query->getQueryOffset();
+        $limit = $query->getLimit();
+        $offset = $query->getOffset();
 
         $qryString = "
             SELECT $fields
