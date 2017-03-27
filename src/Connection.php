@@ -233,6 +233,29 @@ class Connection extends BaseConnection
     }
 
     /**
+     * @param Query $query
+     *
+     * @return string
+     */
+    private function parseUnion(Query $query): string
+    {
+        $union = '';
+
+        if ($query->hasUnion()) {
+            $union .= 'UNION ';
+
+            if ($query->isUnionAll()) {
+                $union .= 'ALL ';
+            }
+
+            $union .= "\n\r";
+            $union .= ('('.$this->translate($query->getUnion()).')');
+        }
+
+        return $union;
+    }
+
+    /**
      * @param Query\WhereClause $whereClause
      *
      * @return string
@@ -300,6 +323,7 @@ class Connection extends BaseConnection
         $orderBy = $this->parseOrderArray($query->getOrdination());
         $limit = $query->getLimit();
         $offset = $query->getOffset();
+        $union = $this->parseUnion($query);
 
         $qryString = "
             SELECT $fields
@@ -309,6 +333,7 @@ class Connection extends BaseConnection
             ".($orderBy ? "ORDER BY $orderBy" : '')."
             ".(!is_null($limit) ? "LIMIT $limit" : '')."
             ".(!is_null($offset) ? "OFFSET $offset" : '')."
+            ".($union ?: '')."
         ";
 
         return $qryString;
