@@ -114,6 +114,14 @@ class Connection extends BaseConnection
     }
 
     /**
+     * @return string
+     */
+    public function getDateFormat(): string
+    {
+        return $this->options['dateFormat'];
+    }
+
+    /**
      * The id of the last stored document.
      *
      * @return string
@@ -350,6 +358,10 @@ class Connection extends BaseConnection
     {
         if (!isset($options['dsn'], $options['user'], $options['password'])) {
             throw new \Exception('Missing "dsn", "user" or "password" information.');
+        }
+
+        if (!isset($options['dateFormat'])) {
+            $options['dateFormat'] = 'Y-m-d H:i:s';
         }
 
         $this->options = $options;
