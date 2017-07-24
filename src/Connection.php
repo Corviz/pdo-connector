@@ -206,7 +206,7 @@ class Connection extends BaseConnection
             }
 
             $alias = ($aggregate != '*' ? $aggregate : 'all') . "_$aggregateName";
-            $fields[] = "$aggregate AS $alias";
+            $fields[] = "$aggregateName($aggregate) AS $alias";
         }
 
         return implode(', ', $fields);
