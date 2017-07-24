@@ -128,7 +128,7 @@ class Connection extends BaseConnection
      */
     public function lastId(): string
     {
-        $this->pdo->lastInsertId();
+        return $this->pdo->lastInsertId();
     }
 
     /**
@@ -189,13 +189,38 @@ class Connection extends BaseConnection
     }
 
     /**
-     * @param array $joins
+     * @param Query $query
+     * @return string
+     */
+    private function parseFields(Query $query): string
+    {
+        $fields = $query->getFields();
+
+        $aggregates = ['avg', 'count', 'max', 'min', 'sum'];
+
+        foreach ($aggregates as $aggregateName) {
+            $aggregate = $query->{'get'.$aggregateName.'aggregate'}();
+
+            if (!$aggregate) {
+                continue;
+            }
+
+            $alias = ($aggregate != '*' ? $aggregate : 'all') . "_$aggregateName";
+            $fields[] = "$aggregate AS $alias";
+        }
+
+        return implode(', ', $fields);
+    }
+
+    /**
+     * @param Query $query
      *
      * @return string
      * @throws \Exception
      */
-    private function parseJoinArray(array $joins): string
+    private function parseJoinArray(Query $query): string
     {
+        $joins = $query->getJoins();
         $joinStr = '';
         foreach ($joins as $join) {
             if (!$join instanceof Join) {
@@ -226,12 +251,13 @@ class Connection extends BaseConnection
     }
 
     /**
-     * @param array $order
+     * @param Query $query
      *
      * @return string
      */
-    private function parseOrderArray(array $order): string
+    private function parseOrder(Query $query): string
     {
+        $order = $query->getOrdination();
         $orderBy = '';
         foreach ($order as $field => $ascDesc) {
             $orderBy .= "$field $ascDesc,";
@@ -324,11 +350,11 @@ class Connection extends BaseConnection
      */
     private function translate(Query $query): string
     {
-        $fields = implode(',', $query->getFields());
+        $fields = $this->parseFields($query);
         $from = $query->getFrom();
-        $join = $this->parseJoinArray($query->getJoins());
+        $join = $this->parseJoinArray($query);
         $where = $this->parseWhereClause($query->getWhereClause());
-        $orderBy = $this->parseOrderArray($query->getOrdination());
+        $orderBy = $this->parseOrder($query);
         $limit = $query->getLimit();
         $offset = $query->getOffset();
         $union = $this->parseUnion($query);
