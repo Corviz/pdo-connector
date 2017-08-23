@@ -4,7 +4,6 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "2e7d4e585bf35d044cb2e88e30ec3682",
     "content-hash": "36d34e35ed6108a205dd485be1338e6c",
     "packages": [
         {
@@ -13,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Corviz/framework.git",
-                "reference": "d1db75c7913efe96b9d12f5a22fc998854a3cf16"
+                "reference": "330f0485639b182e6d76fd32853c8a89e0c01175"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Corviz/framework/zipball/d1db75c7913efe96b9d12f5a22fc998854a3cf16",
-                "reference": "d1db75c7913efe96b9d12f5a22fc998854a3cf16",
+                "url": "https://api.github.com/repos/Corviz/framework/zipball/330f0485639b182e6d76fd32853c8a89e0c01175",
+                "reference": "330f0485639b182e6d76fd32853c8a89e0c01175",
                 "shasum": ""
             },
             "require": {
@@ -38,7 +37,7 @@
                 "MIT"
             ],
             "description": "Low weight php framework",
-            "time": "2017-07-24 14:03:29"
+            "time": "2017-08-23 14:10:17"
         }
     ],
     "packages-dev": [],
