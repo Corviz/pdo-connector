@@ -107,10 +107,27 @@ class Connection extends BaseConnection
      * @param Model $model
      *
      * @return Result
+     *
+     * @throws \Exception
      */
     public function delete(Model $model): Result
     {
-        // TODO: Implement delete() method.
+        $primaryKeyValues = $model->getPrimaryKeyValues();
+        $table = $model::getTable();
+        $whereParts = [];
+
+        if (count($primaryKeyValues) != count($model::getPrimaryKeys())) {
+            throw new \Exception("All keys must be set before deleting");
+        }
+
+        foreach (array_keys($primaryKeyValues) as $field) {
+            $whereParts[] = "$field=?";
+        }
+
+        $where = implode(' AND ', $whereParts);
+
+        $query = "DELETE FROM $table WHERE $where";
+        return $this->nativeQuery($query, ...array_values($primaryKeyValues));
     }
 
     /**
@@ -119,6 +136,27 @@ class Connection extends BaseConnection
     public function getDateFormat(): string
     {
         return $this->options['dateFormat'];
+    }
+
+    /**
+     * Insert a new row in the database.
+     *
+     * @param Model $model
+     *
+     * @return Result
+     */
+    public function insert(Model $model): Result
+    {
+        $data = $model->getData();
+        $table = $model::getTable();
+
+        $this->convetDates($data, $model);
+
+        $fields = implode(',', array_keys($data));
+        $placeholders = rtrim(str_repeat('?,', count($data)), ',');
+
+        $query = "INSERT INTO $table ($fields) VALUES ($placeholders)";
+        return $this->nativeQuery($query, ...array_values($data));
     }
 
     /**
@@ -158,19 +196,6 @@ class Connection extends BaseConnection
     }
 
     /**
-     * Save the model data in its respective
-     * table or collection.
-     *
-     * @param Model $model
-     *
-     * @return Result
-     */
-    public function save(Model $model): Result
-    {
-        // TODO: Implement save() method.
-    }
-
-    /**
      * Execute a select (or find) operation according
      * to the parameters provided by the query.
      *
@@ -186,6 +211,61 @@ class Connection extends BaseConnection
         array_unshift($args, $sql);
 
         return $this->nativeQuery(...$args);
+    }
+
+    /**
+     * Update a row in the database.
+     *
+     * @param Model $model
+     *
+     * @return Result
+     *
+     * @throws \Exception
+     */
+    public function update(Model $model): Result
+    {
+        $primaryKeyValues = $model->getPrimaryKeyValues();
+        $data = $model->getData();
+        $table = $model::getTable();
+
+        if (count($primaryKeyValues) != count($model::getPrimaryKeys())) {
+            throw new \Exception("All keys must be set before an update");
+        }
+
+        $this->convetDates($data, $model);
+
+        $fieldPlaceholders = '';
+        foreach (array_values($data) as $field) {
+            $fieldPlaceholders .= "$field=?,";
+        }
+        $fieldPlaceholders = rtrim($fieldPlaceholders, ',');
+
+        $whereParts = [];
+        foreach (array_keys($primaryKeyValues) as $pkField) {
+            $whereParts[] = "$pkField=?";
+        }
+        $where = implode(' AND ', $whereParts);
+
+        $query = "UPDATE $table SET $fieldPlaceholders WHERE $where";
+        return $this->nativeQuery($query, ...array_values($data), ...array_values($primaryKeyValues));
+    }
+
+    /**
+     * Parse date fields to database datetime format.
+     *
+     * @param array $data
+     * @param Model $model
+     */
+    private function convetDates(array &$data, Model $model)
+    {
+        $dateFields = $model::getDateFields();
+        $format = $this->getDateFormat();
+
+        foreach ($dateFields as $field) {
+            if (isset($data[$field]) && $data[$field] instanceof \DateTime) {
+                $data[$field] = $data[$field]->format($format);
+            }
+        }
     }
 
     /**
