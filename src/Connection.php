@@ -235,7 +235,7 @@ class Connection extends BaseConnection
         $this->convetDates($data, $model);
 
         $fieldPlaceholders = '';
-        foreach (array_values($data) as $field) {
+        foreach (array_keys($data) as $field) {
             $fieldPlaceholders .= "$field=?,";
         }
         $fieldPlaceholders = rtrim($fieldPlaceholders, ',');
