@@ -3,7 +3,7 @@
   "description": "A database connector based on PDO",
   "type": "library",
   "require": {
-    "corviz/framework": "dev-feature\/database_access"
+    "corviz/framework": "*@alpha"
   },
   "autoload": {
     "psr-4": {
